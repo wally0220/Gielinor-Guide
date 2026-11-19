@@ -20,8 +20,8 @@ from urllib.parse import urlencode, urlsplit
 
 import httpx
 
-from osrs_assistant.core.config import Settings, load_settings
-from osrs_assistant.core.errors import UpstreamError
+from gielinor_guide.core.config import Settings, load_settings
+from gielinor_guide.core.errors import UpstreamError
 
 log = logging.getLogger(__name__)
 

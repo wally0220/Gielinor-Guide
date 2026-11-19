@@ -2,7 +2,7 @@
 
 Nothing personal is hard-coded so the repo stays safe to publish.
 
-    OSRS_ASSISTANT_CONTACT   Contact for the User-Agent (e.g. "@you on Discord").
+    GIELINOR_GUIDE_CONTACT   Contact for the User-Agent (e.g. "@you on Discord").
                              The OSRS Wiki asks API users to include one.
     OSRS_DEFAULT_RSN         Your RuneScape name, used when a tool call omits `rsn`.
 """
@@ -13,11 +13,11 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from osrs_assistant import __version__
+from gielinor_guide import __version__
 
 PROJECT_URL = "https://github.com/wally0220/gielinor-guide"
 
-# backend/.env (gitignored). src/osrs_assistant/core/config.py -> parents[3] == backend/
+# backend/.env (gitignored). src/gielinor_guide/core/config.py -> parents[3] == backend/
 DEFAULT_ENV_FILE = Path(__file__).resolve().parents[3] / ".env"
 
 
@@ -57,6 +57,6 @@ def load_settings() -> Settings:
         return value or None
 
     return Settings(
-        contact=_env("OSRS_ASSISTANT_CONTACT"),
+        contact=_env("GIELINOR_GUIDE_CONTACT"),
         default_rsn=_env("OSRS_DEFAULT_RSN"),
     )

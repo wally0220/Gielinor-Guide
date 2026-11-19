@@ -7,8 +7,8 @@ Gielinor Guide: live Old School RuneScape data for Claude. A Python core library
 an MCP server now, and later as a FastAPI backend with a React + TypeScript frontend.
 
 ## Layout
-- `backend/src/osrs_assistant/core/`: all logic (HTTP, hiscores, XP math, ...). No MCP imports here.
-- `backend/src/osrs_assistant/mcp/server.py`: thin MCP wrapper. Tools translate core errors
+- `backend/src/gielinor_guide/core/`: all logic (HTTP, hiscores, XP math, ...). No MCP imports here.
+- `backend/src/gielinor_guide/mcp/server.py`: thin MCP wrapper. Tools translate core errors
   (`OSRSError`) into `ToolError`.
 - `backend/tests/`: offline tests. HTTP is mocked with `respx`; fixtures live in `tests/fixtures/`.
 - `frontend/`: phase 3 (not started).

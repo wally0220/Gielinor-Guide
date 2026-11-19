@@ -12,7 +12,7 @@ import sys
 
 from mcp.client.client import Client
 
-from osrs_assistant.mcp.server import build_server
+from gielinor_guide.mcp.server import build_server
 
 
 async def main(rsn: str | None) -> None:

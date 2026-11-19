@@ -19,12 +19,12 @@ from mcp.server.mcpserver.exceptions import ToolError
 from mcp_types import ToolAnnotations
 from pydantic import BaseModel, Field
 
-from osrs_assistant import __version__
-from osrs_assistant.core import xp as xpmath
-from osrs_assistant.core.errors import OSRSError
-from osrs_assistant.core.hiscores import GameMode, PlayerStats, fetch_player
-from osrs_assistant.core.http import OSRSHttp
-from osrs_assistant.core.skills import SKILLS, normalize_skill
+from gielinor_guide import __version__
+from gielinor_guide.core import xp as xpmath
+from gielinor_guide.core.errors import OSRSError
+from gielinor_guide.core.hiscores import GameMode, PlayerStats, fetch_player
+from gielinor_guide.core.http import OSRSHttp
+from gielinor_guide.core.skills import SKILLS, normalize_skill
 
 INSTRUCTIONS = """\
 Live Old School RuneScape data. Prefer these tools over memory for anything that changes

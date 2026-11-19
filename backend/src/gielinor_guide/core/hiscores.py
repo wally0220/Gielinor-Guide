@@ -13,9 +13,9 @@ import math
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from osrs_assistant.core.errors import PlayerNotFoundError, UpstreamError
-from osrs_assistant.core.http import OSRSHttp
-from osrs_assistant.core.skills import normalize_skill
+from gielinor_guide.core.errors import PlayerNotFoundError, UpstreamError
+from gielinor_guide.core.http import OSRSHttp
+from gielinor_guide.core.skills import normalize_skill
 
 GameMode = Literal[
     "normal", "ironman", "hardcore", "ultimate", "deadman", "seasonal", "fresh_start"

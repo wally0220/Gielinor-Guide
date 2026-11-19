@@ -10,7 +10,7 @@ the roadmap.
 
 ```
                 ┌──────────────────────────────┐
-                │  osrs_assistant.core         │
+                │  gielinor_guide.core         │
                 │  hiscores · xp · http/cache  │
                 │  (prices · wiki · quests)    │
                 └──────┬───────────────┬───────┘
@@ -48,7 +48,7 @@ uv sync
 uv run pytest
 
 # 3. Configure your RSN (gitignored)
-cp .env.example .env    # then edit OSRS_DEFAULT_RSN and OSRS_ASSISTANT_CONTACT
+cp .env.example .env    # then edit OSRS_DEFAULT_RSN and GIELINOR_GUIDE_CONTACT
 
 # 4. Live smoke test against the real APIs (no Claude involved)
 uv run python scripts/smoke.py

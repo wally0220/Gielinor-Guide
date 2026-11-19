@@ -1,7 +1,7 @@
 import pytest
 
-from osrs_assistant.core.errors import InvalidInputError
-from osrs_assistant.core.xp import (
+from gielinor_guide.core.errors import InvalidInputError
+from gielinor_guide.core.xp import (
     MAX_VIRTUAL_LEVEL,
     Method,
     actions_needed,

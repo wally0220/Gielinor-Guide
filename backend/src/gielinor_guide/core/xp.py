@@ -13,7 +13,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from osrs_assistant.core.errors import InvalidInputError
+from gielinor_guide.core.errors import InvalidInputError
 
 MAX_LEVEL = 99
 MAX_VIRTUAL_LEVEL = 126

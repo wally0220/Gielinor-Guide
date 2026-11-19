@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from osrs_assistant.core.errors import InvalidInputError
+from gielinor_guide.core.errors import InvalidInputError
 
 # Order matches the in-game skill guide / hiscores (excluding "Overall").
 SKILLS: tuple[str, ...] = (

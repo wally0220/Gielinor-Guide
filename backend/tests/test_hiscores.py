@@ -6,10 +6,10 @@ import httpx
 import pytest
 import respx
 
-from osrs_assistant.core.config import Settings
-from osrs_assistant.core.errors import PlayerNotFoundError, UpstreamError
-from osrs_assistant.core.hiscores import fetch_player, parse_hiscores
-from osrs_assistant.core.http import OSRSHttp
+from gielinor_guide.core.config import Settings
+from gielinor_guide.core.errors import PlayerNotFoundError, UpstreamError
+from gielinor_guide.core.hiscores import fetch_player, parse_hiscores
+from gielinor_guide.core.http import OSRSHttp
 
 URL = "https://secure.runescape.com/m=hiscore_oldschool/index_lite.json"
 SETTINGS = Settings(contact="test@example.com", default_rsn=None)
@@ -82,7 +82,7 @@ async def test_retries_on_503(hiscores_sample: dict[str, Any], monkeypatch: Any)
     async def no_sleep(_: float) -> None:
         return None
 
-    monkeypatch.setattr("osrs_assistant.core.http.asyncio.sleep", no_sleep)
+    monkeypatch.setattr("gielinor_guide.core.http.asyncio.sleep", no_sleep)
     route = respx.get(URL).mock(
         side_effect=[httpx.Response(503), httpx.Response(200, json=hiscores_sample)]
     )

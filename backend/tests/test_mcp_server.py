@@ -9,9 +9,9 @@ import pytest
 import respx
 from mcp.client.client import Client
 
-from osrs_assistant.core.config import Settings
-from osrs_assistant.core.http import OSRSHttp
-from osrs_assistant.mcp.server import build_server
+from gielinor_guide.core.config import Settings
+from gielinor_guide.core.http import OSRSHttp
+from gielinor_guide.mcp.server import build_server
 
 URL = "https://secure.runescape.com/m=hiscore_oldschool/index_lite.json"
 
