@@ -7,7 +7,7 @@
         "${CLAUDE_PROJECT_DIR:-.}/backend",
         "run",
         "--quiet",
-        "osrs-mcp"
+        "gielinor-guide"
       ]
     }
   }

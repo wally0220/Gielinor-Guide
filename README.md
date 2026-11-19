@@ -72,13 +72,13 @@ Inside Claude Code, run `/mcp` to confirm `osrs` is connected, then try:
 Prefer registering it yourself? Equivalent command:
 
 ```bash
-claude mcp add osrs --scope project -- uv --directory "$PWD/backend" run --quiet osrs-mcp
+claude mcp add osrs --scope project -- uv --directory "$PWD/backend" run --quiet gielinor-guide
 ```
 
 ### Debug with the MCP Inspector (optional)
 
 ```bash
-npx @modelcontextprotocol/inspector uv --directory backend run --quiet osrs-mcp
+npx @modelcontextprotocol/inspector uv --directory backend run --quiet gielinor-guide
 ```
 
 ## Design notes

@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-osrs-mcp = "gielinor_guide.mcp.server:main"
+gielinor-guide = "gielinor_guide.mcp.server:main"
 
 [dependency-groups]
 dev = [

@@ -6,5 +6,5 @@ See the [project README](../README.md) for setup, architecture and usage.
 ```bash
 uv sync            # install
 uv run pytest      # tests (offline)
-uv run osrs-mcp    # start the MCP server on stdio
+uv run gielinor-guide  # start the MCP server on stdio
 ```

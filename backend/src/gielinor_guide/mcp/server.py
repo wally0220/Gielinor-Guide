@@ -1,6 +1,6 @@
 """Gielinor Guide MCP server.
 
-Run it with `uv run osrs-mcp` (stdio transport). Claude Code / Claude Desktop start it for you.
+Run it with `uv run gielinor-guide` (stdio). Claude Code / Claude Desktop start it for you.
 
 Rule for stdio servers: never print() to stdout. Stdout carries the MCP protocol, so stray
 output corrupts it. Logging goes to stderr.
