@@ -1,0 +1,167 @@
+{
+ "username": "SamplePlayer",
+ "timestamp": "2026-11-19T04:28:51.673Z",
+ "quests": {
+  ".": 0,
+  "Cook's Assistant": 2,
+  "Legends' Quest": 2,
+  "Dragon Slayer II": 0,
+  "A Tail of Two Cats": 0,
+  "Contact!": 1,
+  "Regicide": 1,
+  "Recipe for Disaster - Lumbridge Guide": 2,
+  "While Guthix Sleeps": 0
+ },
+ "achievement_diaries": {
+  "Ardougne": {
+   "Easy": {
+    "complete": true,
+    "tasks": [
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true
+    ]
+   },
+   "Elite": {
+    "complete": false,
+    "tasks": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   "Hard": {
+    "complete": false,
+    "tasks": [
+     false,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   "Medium": {
+    "complete": false,
+    "tasks": [
+     true,
+     true,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   }
+  },
+  "Kourend & Kebos": {
+   "Easy": {
+    "complete": false,
+    "tasks": [
+     true,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   "Elite": {
+    "complete": false,
+    "tasks": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   "Hard": {
+    "complete": false,
+    "tasks": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   "Medium": {
+    "complete": false,
+    "tasks": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   }
+  }
+ },
+ "levels": {
+  "Attack": 82,
+  "Magic": 73,
+  "Smithing": 50,
+  "Thieving": 53,
+  "Sailing": 1
+ },
+ "music_tracks": {
+  "Adventure": true,
+  "Al Kharid": true,
+  "7th Realm": false
+ },
+ "combat_achievements": [
+  32,
+  521
+ ],
+ "league_tasks": null,
+ "bingo_tasks": [],
+ "collection_log": [],
+ "collectionLogItemCount": null,
+ "sea_charting": []
+}

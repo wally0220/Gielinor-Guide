@@ -29,9 +29,11 @@ the roadmap.
 |---|---|---|
 | `get_player_stats` | Levels, XP, ranks, total and combat level | Official OSRS hiscores |
 | `xp_calc` | XP to a target level and actions needed per method | Local formula (+ hiscores for exact XP) |
+| `get_account_progress` | Quests, Achievement Diaries, combat achievements, collection log | [WikiSync](https://oldschool.runescape.wiki/w/RuneScape:WikiSync) RuneLite plugin |
+| `import_bank` | Bank, inventory and equipment, with search and "what changed since last time" | RuneLite "Data Export" plugin (local files) |
 
-Planned: `lookup_item`, `get_prices`, `calc_margin`, `get_price_history`, `wiki_search`,
-`wiki_read`, `wiki_infobox`, `check_quest_requirements`.
+Planned: `suggest_training`, `get_progress`, `lookup_item`, `get_prices`, `calc_margin`,
+`get_price_history`, `wiki_search`, `wiki_read`, `wiki_infobox`, `check_quest_requirements`.
 
 ## Quick start (macOS)
 
@@ -54,6 +56,17 @@ cp .env.example .env    # then edit OSRS_DEFAULT_RSN and GIELINOR_GUIDE_CONTACT
 uv run python scripts/smoke.py
 ```
 
+### Optional: RuneLite plugins for account data
+
+The hiscores only know levels and XP. Two RuneLite Plugin Hub plugins fill the gaps:
+
+- **WikiSync** (for `get_account_progress`): turn it on and log in; quests, diaries and
+  combat achievements sync automatically. For the collection log, open it in game and press
+  the WikiSync button (top right).
+- **Data Export** (for `import_bank`): enable bank, inventory and equipment in its settings.
+  Files are written to `~/.runelite/Data Exports/` when you open your bank or change gear.
+  They never leave your machine; snapshots are kept in `~/.local/share/gielinor-guide/`.
+
 ### Connect to Claude Code
 
 The repo ships a project-scoped [`.mcp.json`](.mcp.json), so there's nothing to register:
@@ -68,6 +81,8 @@ Inside Claude Code, run `/mcp` to confirm `osrs` is connected, then try:
 - "What are my current stats?"
 - "How many Lvl-5 Enchant casts (78 XP) do I need for 75 Magic?"
 - "Compare gold bars with goldsmith gauntlets (56.2 XP) vs. 22.5 XP without, for 70 Smithing."
+- "Have I finished the quests Dragon Slayer II needs?"
+- "How many cosmic runes do I have, and what changed in my bank since last time?"
 
 Prefer registering it yourself? Equivalent command:
 
@@ -91,7 +106,11 @@ npx @modelcontextprotocol/inspector uv --directory backend run --quiet gielinor-
   typed results instead of free text.
 - **Offline tests:** HTTP is mocked with `respx`; MCP tools are tested end-to-end through an
   in-memory MCP client.
-- **No personal data in the repo:** RSN and contact info live in `backend/.env`.
+- **No personal data in the repo:** RSN and contact info live in `backend/.env`; account
+  history lives in a local SQLite file outside the repo. Test fixtures are synthetic.
+- **Built from real payloads:** the WikiSync and Data Export parsers were written against real
+  responses, including their quirks (a junk `"."` quest key, JSON Lines files, items whose id
+  changes when equipped).
 
 ## Development
 

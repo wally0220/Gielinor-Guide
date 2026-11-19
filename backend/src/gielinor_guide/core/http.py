@@ -86,10 +86,12 @@ class OSRSHttp:
         params: dict[str, str] | None = None,
         ttl: float = 60.0,
         not_found: Callable[[], Exception] | None = None,
+        not_found_statuses: frozenset[int] = frozenset({404}),
     ) -> Any:
         """GET a JSON document, served from cache when fresh.
 
-        `not_found` lets callers turn a 404 into a meaningful error (e.g. unknown player).
+        `not_found` lets callers turn a 404 (or any of `not_found_statuses`) into a meaningful
+        error, e.g. an unknown player.
         """
         key = f"{url}?{urlencode(sorted((params or {}).items()))}"
         cached = self.cache.get(key)
@@ -102,7 +104,7 @@ class OSRSHttp:
             cached = self.cache.get(key)
             if cached is not None:
                 return cached
-            data = await self._fetch(url, params, not_found)
+            data = await self._fetch(url, params, not_found, not_found_statuses)
             self.cache.set(key, data, ttl)
             return data
 
@@ -111,6 +113,7 @@ class OSRSHttp:
         url: str,
         params: dict[str, str] | None,
         not_found: Callable[[], Exception] | None,
+        not_found_statuses: frozenset[int],
     ) -> Any:
         host = urlsplit(url).netloc
         for attempt in range(self._max_retries + 1):
@@ -123,7 +126,7 @@ class OSRSHttp:
                 await asyncio.sleep(2**attempt)
                 continue
 
-            if resp.status_code == 404 and not_found is not None:
+            if resp.status_code in not_found_statuses and not_found is not None:
                 raise not_found()
             if resp.status_code in RETRY_STATUSES and attempt < self._max_retries:
                 delay = _retry_after(resp) or 2**attempt

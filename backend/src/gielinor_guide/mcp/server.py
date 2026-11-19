@@ -10,8 +10,9 @@ from __future__ import annotations
 
 import logging
 import sys
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
+from datetime import datetime
 from typing import Annotated
 
 from mcp.server.mcpserver import MCPServer
@@ -25,6 +26,8 @@ from gielinor_guide.core.errors import OSRSError
 from gielinor_guide.core.hiscores import GameMode, PlayerStats, fetch_player
 from gielinor_guide.core.http import OSRSHttp
 from gielinor_guide.core.skills import SKILLS, normalize_skill
+from gielinor_guide.core.store import Store
+from gielinor_guide.mcp.account_tools import register_account_tools, utc_now
 
 INSTRUCTIONS = """\
 Live Old School RuneScape data. Prefer these tools over memory for anything that changes
@@ -33,6 +36,12 @@ Live Old School RuneScape data. Prefer these tools over memory for anything that
   the server falls back to the configured default RSN.
 - For "how many X to reach level Y", use xp_calc with the user's RSN so the math starts from
   their exact XP, not a rounded level.
+- Hiscores (get_player_stats) are the source of truth for levels/XP. WikiSync
+  (get_account_progress) covers quests, diaries, combat achievements and collection log.
+  RuneLite exports (import_bank) cover what the player owns and is wearing.
+- Combine them: e.g. check owned items before suggesting what to buy, and quest/diary status
+  before suggesting methods that need unlocks.
+- After answering, offer one or two natural follow-ups the other tools can answer.
 """
 
 READ_ONLY_REMOTE = ToolAnnotations(read_only_hint=True, open_world_hint=True)
@@ -90,10 +99,24 @@ class XpCalcOut(BaseModel):
 # ---------- Server ----------
 
 
-def build_server(http: OSRSHttp | None = None) -> MCPServer:
-    """Create the server. Tests pass in an OSRSHttp with a mocked transport."""
+def build_server(
+    http: OSRSHttp | None = None,
+    *,
+    store: Store | None = None,
+    now: Callable[[], datetime] = utc_now,
+) -> MCPServer:
+    """Create the server. Tests inject a mocked HTTP transport, a temp store and a fixed clock."""
+    # httpx logs every request at INFO; keep stderr (and the smoke script) readable.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     client = http or OSRSHttp()
     default_rsn = client.settings.default_rsn
+    stores: list[Store] = [store] if store else []
+
+    def get_store() -> Store:
+        # Opened lazily so tools that don't need history never touch the disk.
+        if not stores:
+            stores.append(Store.in_data_dir(client.settings.data_dir))
+        return stores[0]
 
     @asynccontextmanager
     async def lifespan(_server: MCPServer) -> AsyncIterator[None]:
@@ -101,6 +124,8 @@ def build_server(http: OSRSHttp | None = None) -> MCPServer:
             yield
         finally:
             await client.aclose()
+            for s in stores:
+                s.close()
 
     server: MCPServer = MCPServer(
         "gielinor-guide",
@@ -237,6 +262,9 @@ def build_server(http: OSRSHttp | None = None) -> MCPServer:
             ],
         )
 
+    register_account_tools(
+        server, client=client, resolve_rsn=resolve_rsn, get_store=get_store, now=now
+    )
     return server
 
 
