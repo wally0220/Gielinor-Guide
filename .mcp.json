@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "osrs": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "${CLAUDE_PROJECT_DIR:-.}/backend",
+        "run",
+        "--quiet",
+        "osrs-mcp"
+      ]
+    }
+  }
+}
