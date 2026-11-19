@@ -1,8 +1,8 @@
 # Gielinor Guide
 
-Live Old School RuneScape data for Claude: your real levels from the hiscores, exact XP math,
-and (coming next) Grand Exchange prices, Wiki lookups and quest requirement checks. No more
-screenshots, no more guessing.
+The Gielinor Guide grew up: an MCP server that gives Claude your live OSRS stats and exact XP
+math. Grand Exchange prices, Wiki knowledge and quest requirement checks: Soon™.
+No more screenshots, no more guessing.
 
 Built as a Python core library exposed over the
 [Model Context Protocol](https://modelcontextprotocol.io), with a web API and React frontend on

@@ -15,7 +15,7 @@ from pathlib import Path
 
 from osrs_assistant import __version__
 
-PROJECT_URL = "https://github.com/your-username/gielinor-guide"
+PROJECT_URL = "https://github.com/wally0220/gielinor-guide"
 
 # backend/.env (gitignored). src/osrs_assistant/core/config.py -> parents[3] == backend/
 DEFAULT_ENV_FILE = Path(__file__).resolve().parents[3] / ".env"
