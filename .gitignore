@@ -25,3 +25,6 @@ frontend/dist/
 
 # Claude Code personal settings
 .claude/settings.local.json
+
+# Personal data exports (WikiSync, RuneLite) used for local development
+.local/
