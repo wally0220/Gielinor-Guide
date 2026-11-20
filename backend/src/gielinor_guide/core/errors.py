@@ -23,3 +23,16 @@ class UpstreamError(OSRSError):
 
 class InvalidInputError(OSRSError):
     """The caller passed something that can't be used (unknown skill, bad level, ...)."""
+
+
+class AccountNotSyncedError(OSRSError):
+    def __init__(self, rsn: str) -> None:
+        super().__init__(
+            f"No WikiSync data for '{rsn}'. The account needs the WikiSync RuneLite plugin "
+            "turned on and to have logged in with it at least once."
+        )
+        self.rsn = rsn
+
+
+class ExportNotFoundError(OSRSError):
+    """No RuneLite Data Export files where we looked."""

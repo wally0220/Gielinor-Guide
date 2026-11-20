@@ -5,6 +5,10 @@ Nothing personal is hard-coded so the repo stays safe to publish.
     GIELINOR_GUIDE_CONTACT   Contact for the User-Agent (e.g. "@you on Discord").
                              The OSRS Wiki asks API users to include one.
     OSRS_DEFAULT_RSN         Your RuneScape name, used when a tool call omits `rsn`.
+    RUNELITE_EXPORT_DIR      Where the RuneLite "Data Export" plugin writes files.
+                             Default: ~/.runelite/Data Exports
+    GIELINOR_GUIDE_DATA_DIR  Where local history (SQLite) is stored.
+                             Default: ~/.local/share/gielinor-guide
 """
 
 from __future__ import annotations
@@ -36,10 +40,16 @@ def load_env_file(path: Path = DEFAULT_ENV_FILE) -> None:
             os.environ[key] = value
 
 
+DEFAULT_EXPORT_DIR = Path.home() / ".runelite" / "Data Exports"
+DEFAULT_DATA_DIR = Path.home() / ".local" / "share" / "gielinor-guide"
+
+
 @dataclass(frozen=True)
 class Settings:
     contact: str | None
     default_rsn: str | None
+    export_dir: Path = DEFAULT_EXPORT_DIR
+    data_dir: Path = DEFAULT_DATA_DIR
 
     @property
     def user_agent(self) -> str:
@@ -59,4 +69,6 @@ def load_settings() -> Settings:
     return Settings(
         contact=_env("GIELINOR_GUIDE_CONTACT"),
         default_rsn=_env("OSRS_DEFAULT_RSN"),
+        export_dir=Path(_env("RUNELITE_EXPORT_DIR") or DEFAULT_EXPORT_DIR).expanduser(),
+        data_dir=Path(_env("GIELINOR_GUIDE_DATA_DIR") or DEFAULT_DATA_DIR).expanduser(),
     )
