@@ -18,6 +18,7 @@ from gielinor_guide.core.store import Store
 from gielinor_guide.mcp.server import build_server
 
 WIKISYNC = "https://sync.runescape.wiki/runelite/player/SamplePlayer/STANDARD"
+HISCORES = "https://secure.runescape.com/m=hiscore_oldschool/index_lite.json"
 NOW = datetime(2026, 11, 19, 5, 0, tzinfo=UTC)  # 31 min after the fixture's sync timestamp
 
 
@@ -42,8 +43,11 @@ async def test_tools_are_listed(tmp_path: Path) -> None:
 
 @pytest.mark.anyio
 @respx.mock
-async def test_account_progress_summary(tmp_path: Path, wikisync_sample: dict[str, Any]) -> None:
+async def test_account_progress_summary(
+    tmp_path: Path, wikisync_sample: dict[str, Any], hiscores_sample: dict[str, Any]
+) -> None:
     respx.get(WIKISYNC).mock(return_value=httpx.Response(200, json=wikisync_sample))
+    respx.get(HISCORES).mock(return_value=httpx.Response(200, json=hiscores_sample))
     async with Client(make_server(tmp_path)) as client:
         result = await client.call_tool(
             "get_account_progress", {"quests": ["legends quest", "Dragon Slayer II", "nope"]}
@@ -63,15 +67,49 @@ async def test_account_progress_summary(tmp_path: Path, wikisync_sample: dict[st
     assert ardougne["completed_tiers"] == ["Easy"]
     assert ardougne["tasks"]["Medium"] == "4/12"
     assert any("Collection log not synced" in n for n in data["notes"])
+    # Fixture levels agree with the hiscores fixture; unranked Sailing is not a mismatch.
+    assert data["level_mismatches"] == []
+
+
+@pytest.mark.anyio
+@respx.mock
+async def test_level_mismatch_is_reported(
+    tmp_path: Path, wikisync_sample: dict[str, Any], hiscores_sample: dict[str, Any]
+) -> None:
+    wikisync_sample["levels"]["Magic"] = 70  # hiscores fixture says 73
+    respx.get(WIKISYNC).mock(return_value=httpx.Response(200, json=wikisync_sample))
+    respx.get(HISCORES).mock(return_value=httpx.Response(200, json=hiscores_sample))
+    async with Client(make_server(tmp_path)) as client:
+        result = await client.call_tool("get_account_progress", {})
+    data = result.structured_content
+    assert data is not None
+    assert data["level_mismatches"] == [{"skill": "Magic", "wikisync": 70, "hiscores": 73}]
+    assert any("Magic 70→73" in n and "get_player_stats" in n for n in data["notes"])
+
+
+@pytest.mark.anyio
+@respx.mock
+async def test_hiscores_failure_does_not_break_progress(
+    tmp_path: Path, wikisync_sample: dict[str, Any]
+) -> None:
+    respx.get(WIKISYNC).mock(return_value=httpx.Response(200, json=wikisync_sample))
+    respx.get(HISCORES).mock(return_value=httpx.Response(404))
+    async with Client(make_server(tmp_path)) as client:
+        result = await client.call_tool("get_account_progress", {})
+    data = result.structured_content
+    assert data is not None and not result.is_error
+    assert data["level_mismatches"] == []
+    assert any("Couldn't cross-check" in n for n in data["notes"])
 
 
 @pytest.mark.anyio
 @respx.mock
 async def test_account_progress_full_and_stale(
-    tmp_path: Path, wikisync_sample: dict[str, Any]
+    tmp_path: Path, wikisync_sample: dict[str, Any], hiscores_sample: dict[str, Any]
 ) -> None:
     wikisync_sample["timestamp"] = "2026-11-15T05:00:00Z"
     respx.get(WIKISYNC).mock(return_value=httpx.Response(200, json=wikisync_sample))
+    respx.get(HISCORES).mock(return_value=httpx.Response(200, json=hiscores_sample))
     async with Client(make_server(tmp_path)) as client:
         result = await client.call_tool("get_account_progress", {"detail": "full"})
     data = result.structured_content

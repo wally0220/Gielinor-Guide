@@ -13,6 +13,10 @@ an MCP server now, and later as a FastAPI backend with a React + TypeScript fron
   (`mcp/account_tools.py`) and are registered from `build_server`.
 - Data sources: `core/hiscores.py` (Jagex), `core/wikisync.py` (WikiSync plugin API),
   `core/runelite_export.py` (Data Export plugin files), `core/store.py` (local SQLite history).
+- `core/training.py` + `core/data/training_methods.toml`: curated methods and the planner behind
+  `suggest_training`. Add methods to the TOML (with a source URL); `tests/test_training_data.py`
+  validates every entry. Rates must come from the OSRS Wiki unless `approximate = true`
+  (with a `variance` note). Ranking tests use a synthetic dataset via monkeypatch.
 - `backend/tests/`: offline tests. HTTP is mocked with `respx`; fixtures live in `tests/fixtures/`.
 - `frontend/`: phase 3 (not started).
 
@@ -36,9 +40,12 @@ an MCP server now, and later as a FastAPI backend with a React + TypeScript fron
 
 ## Roadmap
 1. ✅ XP math + hiscores (`xp_calc`, `get_player_stats`)
-1.1 ✅ Account data: `get_account_progress` (WikiSync), `import_bank` (RuneLite Data Export)
-1.2 `suggest_training` (curated `core/data/training_methods.yaml`, uses 1.1 for unlocks/items),
-    `get_progress` (hiscores snapshots in the same SQLite store), `next_combat_level`
+1.1 ✅ Account data: `get_account_progress` (WikiSync, cross-checked against hiscores),
+    `import_bank` (RuneLite Data Export)
+1.2 ✅ `suggest_training` (curated TOML dataset; uses 1.1 for unlocks and owned materials)
+1.3 `get_progress` (hiscores snapshots in the same SQLite store), `next_combat_level`,
+    more skills in the training dataset (Magic enchanting etc. once Wiki rates are found)
+1.4 DPS-based Slayer estimates (see the DPS calculator notes in the phase 1.2 PR)
 2. GE prices: `/mapping`, `/latest`, `/1h`, `/timeseries` from prices.runescape.wiki
    (`lookup_item`, `get_prices`, `calc_margin` with 2% GE tax capped at 5m, `get_price_history`)
 3. Wiki: `wiki_search`, `wiki_read`, `wiki_infobox` via oldschool.runescape.wiki/api.php
