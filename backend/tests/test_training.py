@@ -197,6 +197,17 @@ def test_unmet_quest_locks_and_absent_quest_is_unknown(stats_for: Any, progress_
     assert find(plan.available, "blackjacking").requirements[0].status == "unknown"
 
 
+def test_unlocks_later_keeps_missing_requirements(stats_for: Any, progress_with: Any) -> None:
+    # Wealthy citizens unlocks at 50, but the quest gate still applies once it does.
+    stats = stats_for(Thieving=xp_for_level(40))
+    progress = progress_with(**{"Children of the Sun": 0})
+    plan = plan_training("thieving", stats, target_level=60, progress=progress)
+    later = find(plan.unlocks_later, "wealthy_citizens")
+    assert not later.available
+    assert [(c.name, c.detail) for c in later.missing] == [("Children of the Sun", "not started")]
+    assert "wealthy_citizens" not in {s.method.id for s in plan.route}
+
+
 def test_missing_tool_is_reported_but_not_blocking(stats_for: Any) -> None:
     stats = stats_for(Thieving=xp_for_level(53))
     plan = plan_training("thieving", stats, target_level=60, owned=owned(Coins=1))

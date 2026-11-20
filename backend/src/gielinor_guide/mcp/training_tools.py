@@ -101,6 +101,11 @@ class MethodOut(BaseModel):
     )
     recipes: list[RecipeOut] = Field(description="Alternative ingredient sets, in order of use")
     requirements: list[CheckOut]
+    missing: list[str] = Field(
+        default_factory=list,
+        description="Blocking requirements still missing (quests, items). Always empty in "
+        "methods; in unlocks_later the method stays blocked at its level until these are met",
+    )
     boosts: list[CheckOut]
     notes: str
     source: str
@@ -140,7 +145,10 @@ class TrainingOut(BaseModel):
         None, description="Doing every available run method daily (e.g. tree + fruit trees)"
     )
     methods: list[MethodOut] = Field(description="Usable now, best first for `prefer`")
-    unlocks_later: list[MethodOut] = Field(description="Become usable before the target level")
+    unlocks_later: list[MethodOut] = Field(
+        description="Level requirement is reached before the target level; "
+        "check missing for quests or items that would still block them"
+    )
     locked: list[LockedOut] = Field(description="Level OK but a requirement is missing")
     data_sources: dict[str, str]
     notes: list[str]
@@ -165,6 +173,10 @@ def _fmt_rate(rate: tuple[int, int]) -> str | None:
 
 def _check(c: Check) -> CheckOut:
     return CheckOut(name=c.name, status=c.status, detail=c.detail)
+
+
+def _missing(p: MethodPlan) -> list[str]:
+    return [f"{c.name} ({c.detail})" if c.detail else c.name for c in p.missing]
 
 
 def _method(p: MethodPlan) -> MethodOut:
@@ -195,6 +207,7 @@ def _method(p: MethodPlan) -> MethodOut:
             for r in p.recipes
         ],
         requirements=[_check(c) for c in p.requirements],
+        missing=_missing(p),
         boosts=[_check(c) for c in p.boosts],
         notes=m.notes,
         source=m.source,
@@ -330,7 +343,7 @@ def register_training_tools(
                 LockedOut(
                     id=p.method.id,
                     name=p.method.name,
-                    missing=[f"{c.name} ({c.detail})" if c.detail else c.name for c in p.missing],
+                    missing=_missing(p),
                 )
                 for p in plan.locked
             ],

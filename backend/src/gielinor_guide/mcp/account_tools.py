@@ -180,6 +180,7 @@ def register_account_tools(
         # cross-check against the hiscores and say so instead of silently trusting either.
         mismatches: list[LevelMismatchOut] = []
         try:
+            # The normal table is right for every account type: ironmen are ranked there too.
             player = await fetch_player(client, name)
         except OSRSError as exc:
             notes.append(f"Couldn't cross-check levels with the hiscores ({exc}).")

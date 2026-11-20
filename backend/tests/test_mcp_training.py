@@ -171,6 +171,30 @@ async def test_no_combined_runs_note_when_runs_cannot_start(
 
 @pytest.mark.anyio
 @respx.mock
+async def test_unlocks_later_lists_missing_requirements(
+    tmp_path: Path, hiscores_sample: dict[str, Any], wikisync_sample: dict[str, Any]
+) -> None:
+    stats = copy.deepcopy(hiscores_sample)
+    for entry in stats["skills"]:
+        if entry["name"] == "Thieving":
+            entry["level"], entry["xp"] = 40, 37_224
+    progress = copy.deepcopy(wikisync_sample)
+    progress["quests"]["Children of the Sun"] = 0
+    respx.get(HISCORES).mock(return_value=httpx.Response(200, json=stats))
+    respx.get(WIKISYNC).mock(return_value=httpx.Response(200, json=progress))
+    async with Client(make_server(tmp_path)) as client:
+        result = await client.call_tool(
+            "suggest_training", {"skill": "thieving", "target_level": 60}
+        )
+    out = result.structured_content
+    assert out is not None and not result.is_error
+    later = {m["id"]: m for m in out["unlocks_later"]}
+    assert later["wealthy_citizens"]["missing"] == ["Children of the Sun (not started)"]
+    assert all(m["missing"] == [] for m in out["methods"])
+
+
+@pytest.mark.anyio
+@respx.mock
 async def test_uncovered_skill_is_clean_error(
     tmp_path: Path, hiscores_sample: dict[str, Any]
 ) -> None:
