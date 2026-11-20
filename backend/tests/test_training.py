@@ -229,6 +229,20 @@ def test_farming_runs_cover_the_whole_gap(stats_for: Any) -> None:
     assert plan.combined_runs.days < find(plan.available, "tree_runs").runs_needed
 
 
+def test_no_combined_runs_below_every_run_tier(stats_for: Any) -> None:
+    # Tree runs start at 15 and fruit tree runs at 27, so from level 5 neither can
+    # make any progress: there is no combined estimate rather than a capped bogus one.
+    plan = plan_training("farming", stats_for(Farming=xp_for_level(5)), target_level=20)
+    assert plan.combined_runs is None
+
+
+def test_combined_runs_pick_up_methods_that_unlock_mid_plan(stats_for: Any) -> None:
+    # Only tree runs apply at 15; fruit tree runs join once the simulation reaches 27.
+    plan = plan_training("farming", stats_for(Farming=xp_for_level(15)), target_level=30)
+    assert plan.combined_runs is not None
+    assert 0 < plan.combined_runs.days < 100_000
+
+
 def test_papaya_tier_is_used_from_57(stats_for: Any) -> None:
     fruit = method("fruit_tree_runs")
     assert [t.crop for t in fruit.tiers if 51 <= t.level <= 68] == ["Pineapple", "Papaya", "Palm"]

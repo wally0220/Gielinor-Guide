@@ -516,13 +516,20 @@ def _combined_runs(
     xp, days, minutes = current_xp, 0, 0.0
     while xp < target_xp and days < 100_000:
         level = xpmath.level_for_xp(xp)
+        progressed = False
         for m in runs:
             assert m.patches is not None and m.minutes_per_run is not None
             tiers = [t for t in m.tiers if t.level <= level]
             if tiers:
                 xp += math.floor(max(tiers, key=lambda t: t.level).xp_per_patch * m.patches)
                 minutes += m.minutes_per_run
+                progressed = True
+        if not progressed:
+            # No run method has a tier at this level yet (e.g. Farming 5, trees start at 15).
+            return None
         days += 1
+    if xp < target_xp:
+        return None
     return CombinedRuns(tuple(m.name for m in runs), days, round(minutes / 60, 1))
 
 

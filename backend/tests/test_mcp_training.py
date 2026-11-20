@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from pathlib import Path
 from typing import Any
 
@@ -145,6 +146,27 @@ async def test_skip_account_data(tmp_path: Path, hiscores_sample: dict[str, Any]
     assert data["data_sources"]["wikisync"] == "skipped"
     assert len(data["methods"]) == 1
     assert [s["method"] for s in data["route"]][-1] == "Super restore potions"
+
+
+@pytest.mark.anyio
+@respx.mock
+async def test_no_combined_runs_note_when_runs_cannot_start(
+    tmp_path: Path, hiscores_sample: dict[str, Any]
+) -> None:
+    data = copy.deepcopy(hiscores_sample)
+    for entry in data["skills"]:
+        if entry["name"] == "Farming":
+            entry["level"], entry["xp"] = 5, 388  # below every run method's first tier
+    respx.get(HISCORES).mock(return_value=httpx.Response(200, json=data))
+    async with Client(make_server(tmp_path)) as client:
+        result = await client.call_tool(
+            "suggest_training",
+            {"skill": "farming", "target_level": 20, "use_account_data": False},
+        )
+    out = result.structured_content
+    assert out is not None and not result.is_error
+    assert out["combined_runs"] is None
+    assert not any("combined_runs" in n for n in out["notes"])
 
 
 @pytest.mark.anyio
