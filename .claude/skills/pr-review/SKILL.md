@@ -1,7 +1,7 @@
 ---
 name: pr-review
 description: Senior-engineer review of a pull request in this repo. Use when asked to review a PR or a branch's changes. Args "[--post] <owner/repo> <pr-number>"; --post publishes the review to GitHub (used by CI), otherwise print it.
-allowed-tools: Read, Grep, Glob, Bash(gh pr view:*), Bash(gh pr diff:*), Bash(gh pr checks:*), Bash(gh pr comment:*), Bash(gh api:*), Bash(git log:*), Bash(git diff:*), Bash(git show:*), Bash(git blame:*), mcp__github_inline_comment__create_inline_comment
+allowed-tools: Read, Write, Grep, Glob, Bash(gh pr view:*), Bash(gh pr diff:*), Bash(gh pr checks:*), Bash(gh pr comment:*), Bash(gh api:*), Bash(git log:*), Bash(git diff:*), Bash(git show:*), Bash(git blame:*), mcp__github_inline_comment__create_inline_comment
 ---
 
 # PR review
@@ -92,8 +92,8 @@ issues. Verdict: any blocker means Request changes; majors only means Approve wi
 ## 4. Delivery
 
 - With `--post`: post each inline comment with `mcp__github_inline_comment__create_inline_comment`,
-  then the summary with
-  `gh pr comment <n> --repo <repo> --edit-last --create-if-none --body "<summary>"`
+  then write the summary to `review-summary.md` in the working directory and post it with
+  `gh pr comment <n> --repo <repo> --edit-last --create-if-none --body-file review-summary.md`
   so re-reviews update one comment instead of stacking new ones (if `--create-if-none` is
   unsupported, retry with `--edit-last`, then plain `gh pr comment`). Post nothing else.
 - Without `--post`: print the summary, then the inline findings as `path:line` bullets. Post nothing.
