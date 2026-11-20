@@ -82,6 +82,28 @@ def test_schema_rejects_bad_entries(overrides: dict[str, object]) -> None:
         MethodData.model_validate({**BASE, **overrides})
 
 
+RUNS = {
+    **BASE,
+    "kind": "runs",
+    "tiers": [{"level": 1, "crop": "X", "xp_per_patch": 100.0}],
+    "patches": 4,
+    "minutes_per_run": 5.0,
+    "runs_per_day": 2.0,
+}
+
+
+def test_valid_run_method_passes() -> None:
+    MethodData.model_validate(RUNS)
+
+
+@pytest.mark.parametrize("field", ["patches", "minutes_per_run", "runs_per_day"])
+@pytest.mark.parametrize("value", [-5, 0])
+def test_run_fields_must_be_positive(field: str, value: int) -> None:
+    # Negative values would otherwise give negative hours/days or crash the run simulation.
+    with pytest.raises(ValidationError):
+        MethodData.model_validate({**RUNS, field: value})
+
+
 def test_skill_aliases_are_normalized() -> None:
     m = MethodData.model_validate({**BASE, "skill": "thiev", "xp_per_hour": [1, 2]})
     assert m.skill == "Thieving"

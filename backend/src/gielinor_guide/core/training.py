@@ -88,9 +88,9 @@ class MethodData(BaseModel):
     variance: str = ""
     notes: str = ""
     source: str
-    patches: int | None = None
-    minutes_per_run: float | None = None
-    runs_per_day: float | None = None
+    patches: int | None = Field(None, gt=0)
+    minutes_per_run: float | None = Field(None, gt=0)
+    runs_per_day: float | None = Field(None, gt=0)
     tiers: list[Tier] = []
 
     @model_validator(mode="after")
@@ -371,7 +371,7 @@ def _hourly_hours(m: MethodData, start_xp: int, end_xp: int) -> tuple[float, flo
     boundaries = [lvl for lvl, _, _ in m.rate_table()]
     xp, fast, slow = start_xp, 0.0, 0.0
     while xp < end_xp:
-        level = xpmath.level_for_xp(xp, virtual=True)
+        level = xpmath.level_for_xp(xp)
         low, high = m.rate_at(level)
         nxt = next((b for b in boundaries if b > level), None)
         seg_end = min(end_xp, xpmath.xp_for_level(nxt)) if nxt else end_xp
