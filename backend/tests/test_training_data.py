@@ -69,12 +69,17 @@ BASE = {
         {"xp_per_hour": [100, 200], "skill": "Dungeoneering"},
         {"xp_per_hour": [100, 200], "source": "http://insecure.example"},
         {"xp_per_hour": [100, 200], "recipes": [{"Gold ore": 1}]},  # recipes need xp_each
+        {"xp_per_hour": [100, 200], "xp_each": 10, "recipes": [{"Gold ore": 0}]},
+        {"xp_per_hour": [100, 200], "xp_each": 10, "recipes": [{"Gold ore": -1}]},
         {"xp_per_hour": [100, 200], "rates": [[1, 150]]},  # two rate fields
         {"rates": [[5, 100]]},  # rate table must start at min_level
         {"rates": [[1, 100], [1, 200]]},  # levels must increase
         {"rates_range": [[1, 300, 200]]},  # low > high
         {"xp_per_hour": [100, 200], "approximate": True},  # approximate needs variance
         {"kind": "runs"},  # runs without tiers
+        {"xp_per_hour": [100, 200], "requires": {"skills": {"Magik": 70}}},  # typo
+        {"xp_per_hour": [100, 200], "requires": {"skills": {"Magic": 0}}},
+        {"xp_per_hour": [100, 200], "requires": {"skills": {"Magic": 100}}},
     ],
 )
 def test_schema_rejects_bad_entries(overrides: dict[str, object]) -> None:
@@ -102,6 +107,13 @@ def test_run_fields_must_be_positive(field: str, value: int) -> None:
     # Negative values would otherwise give negative hours/days or crash the run simulation.
     with pytest.raises(ValidationError):
         MethodData.model_validate({**RUNS, field: value})
+
+
+def test_skill_requirements_are_normalized() -> None:
+    m = MethodData.model_validate(
+        {**BASE, "xp_per_hour": [100, 200], "requires": {"skills": {"magic": 70}}}
+    )
+    assert m.requires.skills == {"Magic": 70}
 
 
 def test_skill_aliases_are_normalized() -> None:

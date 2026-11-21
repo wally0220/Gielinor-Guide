@@ -247,6 +247,13 @@ def test_no_combined_runs_below_every_run_tier(stats_for: Any) -> None:
     assert plan.combined_runs is None
 
 
+def test_no_combined_runs_when_only_one_method_runs(stats_for: Any) -> None:
+    # Fruit trees start at 27, so 15 -> 20 is tree runs alone: no "combined" estimate.
+    plan = plan_training("farming", stats_for(Farming=xp_for_level(15)), target_level=20)
+    assert "tree_runs" in ids(plan.available)
+    assert plan.combined_runs is None
+
+
 def test_combined_runs_pick_up_methods_that_unlock_mid_plan(stats_for: Any) -> None:
     # Only tree runs apply at 15; fruit tree runs join once the simulation reaches 27.
     plan = plan_training("farming", stats_for(Farming=xp_for_level(15)), target_level=30)

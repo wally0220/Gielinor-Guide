@@ -22,7 +22,7 @@ from gielinor_guide.core.training import (
     plan_training,
     skills_with_methods,
 )
-from gielinor_guide.core.wikisync import AccountProgress, fetch_progress
+from gielinor_guide.core.wikisync import AccountProgress, fetch_progress, profile_for_mode
 
 READ_ONLY_REMOTE = ToolAnnotations(read_only_hint=True, open_world_hint=True)
 
@@ -40,6 +40,8 @@ Args:
     prefer: "balanced" (default), "fast", "afk" (low attention) or "profit".
     use_account_data: Set false to skip WikiSync and the bank export.
     max_methods: How many usable methods to return.
+    mode: Hiscores to query: normal, ironman, hardcore, ultimate, deadman, seasonal,
+        fresh_start.
 
 Curated skills so far: {covered}. Hours are estimates; mention that they're ranges.
 """
@@ -246,21 +248,33 @@ def register_training_tools(
         notes: list[str] = []
         progress: AccountProgress | None = None
         owned: OwnedItems | None = None
-        if use_account_data:
-            try:
-                progress = await fetch_progress(client, name)
-                sources["wikisync"] = "ok"
-            except OSRSError as exc:
-                sources["wikisync"] = f"unavailable: {exc}"
-                notes.append("Quest/diary requirements are 'unknown' without WikiSync data.")
-            try:
-                owned = load_owned_items(client.settings.export_dir, rsn=name)
-                sources["runelite_export"] = "ok"
-            except OSRSError as exc:
-                sources["runelite_export"] = f"unavailable: {exc}"
-                notes.append("Item checks are 'unknown' without a RuneLite bank export.")
-        else:
+        # Account data must describe the same character as the hiscores table: a Leagues
+        # character has its own WikiSync profile and its own bank.
+        profile = profile_for_mode(mode)
+        if not use_account_data:
             sources["wikisync"] = sources["runelite_export"] = "skipped"
+        else:
+            if profile is None:
+                sources["wikisync"] = f"skipped: no WikiSync profile for {mode}"
+            else:
+                try:
+                    progress = await fetch_progress(client, name, profile)
+                    sources["wikisync"] = "ok"
+                except OSRSError as exc:
+                    sources["wikisync"] = f"unavailable: {exc}"
+            if profile == "STANDARD":
+                try:
+                    owned = load_owned_items(client.settings.export_dir, rsn=name)
+                    sources["runelite_export"] = "ok"
+                except OSRSError as exc:
+                    sources["runelite_export"] = f"unavailable: {exc}"
+            else:
+                # Export files don't record the world type, so they can't be tied to this mode.
+                sources["runelite_export"] = f"skipped: can't tell if the export is from {mode}"
+            if progress is None:
+                notes.append("Quest/diary requirements are 'unknown' without WikiSync data.")
+            if owned is None:
+                notes.append("Item checks are 'unknown' without a RuneLite bank export.")
 
         try:
             plan = plan_training(
@@ -291,7 +305,7 @@ def register_training_tools(
             for b in missing_boosts:
                 notes.append(f"{route_plan.method.name}: {b.name} would help ({b.detail}).")
         if plan.combined_runs and plan.route_gaps:
-            notes.append("Run-based methods cover the gaps; see combined_runs.")
+            notes.append("Run-based methods can cover the whole goal; see combined_runs.")
         missing_tools = sorted(
             {
                 c.name

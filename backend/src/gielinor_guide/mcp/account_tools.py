@@ -16,7 +16,13 @@ from gielinor_guide.core.hiscores import fetch_player
 from gielinor_guide.core.http import OSRSHttp
 from gielinor_guide.core.runelite_export import CONTAINERS, Container, load_owned_items
 from gielinor_guide.core.store import Store
-from gielinor_guide.core.wikisync import DIARY_TIERS, Profile, QuestState, fetch_progress
+from gielinor_guide.core.wikisync import (
+    DIARY_TIERS,
+    Profile,
+    QuestState,
+    fetch_progress,
+    hiscores_mode_for_profile,
+)
 
 READ_ONLY_REMOTE = ToolAnnotations(read_only_hint=True, open_world_hint=True)
 # import_bank writes snapshots to the local history DB, but re-running it is harmless.
@@ -177,28 +183,32 @@ def register_account_tools(
         notes: list[str] = []
 
         # WikiSync's `levels` can lag behind (seen: Magic 70 vs. 75 on the hiscores), so
-        # cross-check against the hiscores and say so instead of silently trusting either.
+        # cross-check against the hiscores table for the same character (a Leagues profile
+        # against the seasonal table; ironmen are ranked on the normal table too).
         mismatches: list[LevelMismatchOut] = []
-        try:
-            # The normal table is right for every account type: ironmen are ranked there too.
-            player = await fetch_player(client, name)
-        except OSRSError as exc:
-            notes.append(f"Couldn't cross-check levels with the hiscores ({exc}).")
+        mode = hiscores_mode_for_profile(profile)
+        if mode is None:
+            notes.append(f"No hiscores for the {profile} profile, so levels weren't cross-checked.")
         else:
-            for skill, ws_level in sorted(progress.levels.items()):
-                stat = player.skills.get(skill)
-                if stat is None or stat.level is None or stat.level == ws_level:
-                    continue
-                mismatches.append(
-                    LevelMismatchOut(skill=skill, wikisync=ws_level, hiscores=stat.level)
-                )
-            if mismatches:
-                listed = ", ".join(f"{m.skill} {m.wikisync}→{m.hiscores}" for m in mismatches[:5])
-                more = f" (+{len(mismatches) - 5} more)" if len(mismatches) > 5 else ""
-                notes.append(
-                    f"WikiSync levels differ from the hiscores for {len(mismatches)} skill(s): "
-                    f"{listed}{more}. Use get_player_stats for levels and XP."
-                )
+            try:
+                player = await fetch_player(client, name, mode)
+            except OSRSError as exc:
+                notes.append(f"Couldn't cross-check levels with the hiscores ({exc}).")
+            else:
+                for skill, ws_level in sorted(progress.levels.items()):
+                    stat = player.skills.get(skill)
+                    if stat is None or stat.level is None or stat.level == ws_level:
+                        continue
+                    mismatches.append(
+                        LevelMismatchOut(skill=skill, wikisync=ws_level, hiscores=stat.level)
+                    )
+        if mismatches:
+            listed = ", ".join(f"{m.skill} {m.wikisync}→{m.hiscores}" for m in mismatches[:5])
+            more = f" (+{len(mismatches) - 5} more)" if len(mismatches) > 5 else ""
+            notes.append(
+                f"WikiSync levels differ from the {mode} hiscores for {len(mismatches)} "
+                f"skill(s): {listed}{more}. Use get_player_stats (mode={mode!r}) for levels and XP."
+            )
         if age_min > 24 * 60:
             notes.append(
                 f"WikiSync data is {age_min // 60}h old; log in with RuneLite to refresh it."

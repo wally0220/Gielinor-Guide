@@ -195,6 +195,92 @@ async def test_unlocks_later_lists_missing_requirements(
 
 @pytest.mark.anyio
 @respx.mock
+async def test_ironman_uses_standard_account_data(
+    tmp_path: Path,
+    export_dir: Path,
+    hiscores_sample: dict[str, Any],
+    wikisync_sample: dict[str, Any],
+) -> None:
+    respx.get(HISCORES.replace("hiscore_oldschool", "hiscore_oldschool_ironman")).mock(
+        return_value=httpx.Response(200, json=hiscores_sample)
+    )
+    respx.get(WIKISYNC).mock(return_value=httpx.Response(200, json=wikisync_sample))
+    async with Client(make_server(tmp_path, export_dir)) as client:
+        result = await client.call_tool("suggest_training", {"skill": "smith", "mode": "ironman"})
+    data = result.structured_content
+    assert data is not None and not result.is_error
+    assert data["data_sources"] == {"hiscores": "ok", "wikisync": "ok", "runelite_export": "ok"}
+
+
+@pytest.mark.anyio
+@respx.mock
+async def test_leagues_uses_its_own_profile_and_skips_the_bank(
+    tmp_path: Path,
+    export_dir: Path,
+    hiscores_sample: dict[str, Any],
+    wikisync_sample: dict[str, Any],
+) -> None:
+    respx.get(HISCORES.replace("hiscore_oldschool", "hiscore_oldschool_seasonal")).mock(
+        return_value=httpx.Response(200, json=hiscores_sample)
+    )
+    seasonal = respx.get(WIKISYNC.replace("STANDARD", "SEASONAL"))
+    seasonal.mock(return_value=httpx.Response(200, json=wikisync_sample))
+    standard = respx.get(WIKISYNC).mock(return_value=httpx.Response(200, json=wikisync_sample))
+    async with Client(make_server(tmp_path, export_dir)) as client:
+        result = await client.call_tool("suggest_training", {"skill": "smith", "mode": "seasonal"})
+    data = result.structured_content
+    assert data is not None and not result.is_error
+    assert seasonal.called and not standard.called
+    assert data["data_sources"]["wikisync"] == "ok"
+    assert data["data_sources"]["runelite_export"].startswith("skipped")
+    assert data["methods"][0]["owned_covers_percent"] is None  # the fixture bank isn't used
+
+
+@pytest.mark.anyio
+@respx.mock
+async def test_fresh_start_has_no_account_data(
+    tmp_path: Path, export_dir: Path, hiscores_sample: dict[str, Any]
+) -> None:
+    respx.get(HISCORES.replace("hiscore_oldschool", "hiscore_oldschool_fresh_start")).mock(
+        return_value=httpx.Response(200, json=hiscores_sample)
+    )
+    async with Client(make_server(tmp_path, export_dir)) as client:
+        result = await client.call_tool(
+            "suggest_training", {"skill": "smith", "mode": "fresh_start"}
+        )
+    data = result.structured_content
+    assert data is not None and not result.is_error
+    sources = data["data_sources"]
+    assert sources["wikisync"].startswith("skipped") and sources["runelite_export"].startswith(
+        "skipped"
+    )
+    assert any("without WikiSync data" in n for n in data["notes"])
+
+
+@pytest.mark.anyio
+@respx.mock
+async def test_combined_runs_note_for_farming_gaps(
+    tmp_path: Path, hiscores_sample: dict[str, Any]
+) -> None:
+    data = copy.deepcopy(hiscores_sample)
+    for entry in data["skills"]:
+        if entry["name"] == "Farming":
+            entry["level"], entry["xp"] = 28, 10_824
+    respx.get(HISCORES).mock(return_value=httpx.Response(200, json=data))
+    async with Client(make_server(tmp_path)) as client:
+        result = await client.call_tool(
+            "suggest_training",
+            {"skill": "farming", "target_level": 65, "use_account_data": False},
+        )
+    out = result.structured_content
+    assert out is not None and not result.is_error
+    assert out["route_gaps"] == ["28-65"]
+    assert out["combined_runs"]["methods"] == ["Tree runs (regular trees)", "Fruit tree runs"]
+    assert "Run-based methods can cover the whole goal; see combined_runs." in out["notes"]
+
+
+@pytest.mark.anyio
+@respx.mock
 async def test_uncovered_skill_is_clean_error(
     tmp_path: Path, hiscores_sample: dict[str, Any]
 ) -> None:

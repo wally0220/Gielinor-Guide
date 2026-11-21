@@ -27,11 +27,43 @@ from typing import Any, Literal
 from urllib.parse import quote
 
 from gielinor_guide.core.errors import AccountNotSyncedError, UpstreamError
+from gielinor_guide.core.hiscores import GameMode
 from gielinor_guide.core.http import OSRSHttp
 
 Profile = Literal["STANDARD", "LEAGUE", "DEADMAN", "BETA", "SEASONAL"]
 
 BASE_URL = "https://sync.runescape.wiki/runelite/player/{rsn}/{profile}"
+
+# WikiSync profiles follow RuneLite's world types, hiscores tables follow Jagex's game modes.
+# Ironmen play on standard worlds, so they share the STANDARD profile with normal accounts.
+_MODE_FOR_PROFILE: dict[str, GameMode | None] = {
+    "STANDARD": "normal",
+    "SEASONAL": "seasonal",
+    "LEAGUE": "seasonal",
+    "DEADMAN": "deadman",
+    "BETA": None,  # beta worlds have no hiscores
+}
+_PROFILE_FOR_MODE: dict[str, Profile | None] = {
+    "normal": "STANDARD",
+    "ironman": "STANDARD",
+    "hardcore": "STANDARD",
+    "ultimate": "STANDARD",
+    "seasonal": "SEASONAL",
+    "deadman": "DEADMAN",
+    "fresh_start": None,  # no matching WikiSync profile
+}
+
+
+def hiscores_mode_for_profile(profile: Profile) -> GameMode | None:
+    """Hiscores table holding the same character as this WikiSync profile (None: no table)."""
+    return _MODE_FOR_PROFILE[profile]
+
+
+def profile_for_mode(mode: GameMode) -> Profile | None:
+    """WikiSync profile for the character on this hiscores table (None: no profile)."""
+    return _PROFILE_FOR_MODE[mode]
+
+
 WIKISYNC_TTL = 600.0  # seconds; the plugin pushes on change, so 10 minutes is plenty fresh
 
 DIARY_TIERS = ("Easy", "Medium", "Hard", "Elite")

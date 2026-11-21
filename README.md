@@ -146,24 +146,24 @@ a method takes no Python. To add one:
 
    ```toml
    [[method]]
-   id = "ardougne_knights"            # unique, snake_case
+   id = "wealthy_citizens"            # unique, snake_case
    skill = "Thieving"
-   name = "Pickpocketing Knights of Ardougne"
-   min_level = 55
-   xp_each = 84.3                     # optional; enables action counts and owned materials
-   rates = [[55, 86_000], [60, 98_000], [65, 109_000]]   # Wiki table: [level, XP/h]
-   casual_factor = 0.8                # low end of the range = rate x this (default 0.8)
-   intensity = "medium"               # afk | low | medium | high
+   name = "Stealing valuables / wealthy citizens (Civitas illa Fortis)"
+   min_level = 50
+   rates = [[50, 72_000], [60, 80_000], [70, 93_000]]   # Wiki table: [level, XP/h]
+   casual_factor = 0.9                # low end of the range = rate x this (default 0.8)
+   intensity = "afk"                  # afk | low | medium | high
    cost = "profit"                    # profit | cheap | moderate | expensive
-   source = "https://oldschool.runescape.wiki/w/Thieving_training#Levels_55–99:_Knights_of_Ardougne"
+   source = "https://oldschool.runescape.wiki/w/Thieving_training#Levels_50–99:_Stealing_valuables_in_Varlamore"
    [method.requires]                  # hard requirements: missing ones lock the method
    quests = ["Children of the Sun"]   # also: quests_started, diaries, items, skills, combat_level
    ```
 
-   Other options: a flat `xp_per_hour = [low, high]` or a `rates_range` table with explicit
-   low/high values; alternative ingredient `recipes` (e.g. an unfinished potion *or* herb +
-   vial); `tools` for cheap items you just need to bring (reported, never blocking); and
-   `[[method.boosts]]` for optional diaries, items or outfits. Farming runs use `kind = "runs"`
+   Other options: `xp_each` (XP per action) to count actions and owned materials; a flat
+   `xp_per_hour = [low, high]` or a `rates_range` table with explicit low/high values;
+   alternative ingredient `recipes` (e.g. an unfinished potion *or* herb + vial); `tools` for
+   cheap items you just need to bring (reported, never blocking); and `[[method.boosts]]` for
+   optional diaries, items or outfits. Farming runs use `kind = "runs"`
    with per-crop `tiers`. The header of the TOML file documents every field.
 3. **Run the validator.** Every entry is checked by a pydantic schema in CI:
 

@@ -19,9 +19,9 @@ from dataclasses import dataclass, field
 from functools import cache
 from importlib.resources import files
 from itertools import pairwise
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from gielinor_guide.core import xp as xpmath
 from gielinor_guide.core.errors import InvalidInputError, OSRSError
@@ -52,6 +52,23 @@ class Requirements(BaseModel):
     skills: dict[str, int] = {}
     combat_level: int | None = Field(default=None, ge=3, le=126)
 
+    @field_validator("skills")
+    @classmethod
+    def _known_skills(cls, skills: dict[str, int]) -> dict[str, int]:
+        """Catch typos ("Magik") when the TOML loads, not on a user's request."""
+        out: dict[str, int] = {}
+        for name, level in skills.items():
+            try:
+                canonical = normalize_skill(name)
+            except OSRSError as exc:
+                raise ValueError(str(exc)) from exc
+            if not 1 <= level <= xpmath.MAX_LEVEL:
+                raise ValueError(
+                    f"{canonical} requirement must be 1-{xpmath.MAX_LEVEL}, got {level}"
+                )
+            out[canonical] = level
+        return out
+
 
 class Boost(BaseModel):
     name: str
@@ -80,7 +97,7 @@ class MethodData(BaseModel):
     casual_factor: float = Field(0.8, gt=0, le=1)
     intensity: Intensity
     cost: Cost
-    recipes: list[dict[str, int]] = []
+    recipes: list[dict[str, Annotated[int, Field(gt=0)]]] = []
     tools: list[list[str]] = []
     requires: Requirements = Requirements()
     boosts: list[Boost] = []
@@ -341,7 +358,7 @@ class _Context:
             *(self.quest(q, started_ok=True) for q in r.quests_started),
             *(self.diary(d) for d in r.diaries),
             *(self.any_item(group) for group in r.items),
-            *(self.skill(normalize_skill(s), lvl) for s, lvl in r.skills.items()),
+            *(self.skill(s, lvl) for s, lvl in r.skills.items()),
         ]
         if r.combat_level is not None:
             checks.append(self.combat(r.combat_level))
@@ -514,6 +531,7 @@ def _combined_runs(
     if len(runs) < 2 or current_xp >= target_xp:
         return None
     xp, days, minutes = current_xp, 0, 0.0
+    used: dict[str, None] = {}  # names of methods that actually ran, in dataset order
     while xp < target_xp and days < 100_000:
         level = xpmath.level_for_xp(xp)
         progressed = False
@@ -523,14 +541,17 @@ def _combined_runs(
             if tiers:
                 xp += math.floor(max(tiers, key=lambda t: t.level).xp_per_patch * m.patches)
                 minutes += m.minutes_per_run
+                used[m.name] = None
                 progressed = True
         if not progressed:
             # No run method has a tier at this level yet (e.g. Farming 5, trees start at 15).
             return None
         days += 1
-    if xp < target_xp:
+    # Fewer than two methods ran (e.g. fruit trees never unlock before the target): that's
+    # just the single method's own estimate, already listed with the methods.
+    if xp < target_xp or len(used) < 2:
         return None
-    return CombinedRuns(tuple(m.name for m in runs), days, round(minutes / 60, 1))
+    return CombinedRuns(tuple(used), days, round(minutes / 60, 1))
 
 
 def plan_training(

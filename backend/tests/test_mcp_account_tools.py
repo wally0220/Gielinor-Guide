@@ -89,6 +89,43 @@ async def test_level_mismatch_is_reported(
 
 @pytest.mark.anyio
 @respx.mock
+async def test_leagues_profile_is_checked_against_seasonal_hiscores(
+    tmp_path: Path, wikisync_sample: dict[str, Any], hiscores_sample: dict[str, Any]
+) -> None:
+    wikisync_sample["levels"]["Magic"] = 70  # seasonal hiscores (same fixture) say 73
+    respx.get(WIKISYNC.replace("STANDARD", "SEASONAL")).mock(
+        return_value=httpx.Response(200, json=wikisync_sample)
+    )
+    seasonal = respx.get(HISCORES.replace("hiscore_oldschool", "hiscore_oldschool_seasonal"))
+    seasonal.mock(return_value=httpx.Response(200, json=hiscores_sample))
+    normal = respx.get(HISCORES).mock(return_value=httpx.Response(200, json=hiscores_sample))
+    async with Client(make_server(tmp_path)) as client:
+        result = await client.call_tool("get_account_progress", {"profile": "SEASONAL"})
+    data = result.structured_content
+    assert data is not None and not result.is_error
+    assert seasonal.called and not normal.called
+    assert data["level_mismatches"] == [{"skill": "Magic", "wikisync": 70, "hiscores": 73}]
+    assert any("seasonal hiscores" in n and "mode='seasonal'" in n for n in data["notes"])
+
+
+@pytest.mark.anyio
+@respx.mock
+async def test_beta_profile_skips_the_cross_check(
+    tmp_path: Path, wikisync_sample: dict[str, Any]
+) -> None:
+    respx.get(WIKISYNC.replace("STANDARD", "BETA")).mock(
+        return_value=httpx.Response(200, json=wikisync_sample)
+    )
+    async with Client(make_server(tmp_path)) as client:
+        result = await client.call_tool("get_account_progress", {"profile": "BETA"})
+    data = result.structured_content
+    assert data is not None and not result.is_error
+    assert data["level_mismatches"] == []
+    assert any("No hiscores for the BETA profile" in n for n in data["notes"])
+
+
+@pytest.mark.anyio
+@respx.mock
 async def test_hiscores_failure_does_not_break_progress(
     tmp_path: Path, wikisync_sample: dict[str, Any]
 ) -> None:
