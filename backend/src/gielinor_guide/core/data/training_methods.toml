@@ -1,0 +1,402 @@
+# Curated training methods for suggest_training.
+#
+# Rates come from the OSRS Wiki training guides unless the entry says otherwise
+# (`approximate = true` marks rough community estimates, e.g. Slayer). Last verified against
+# the Wiki: 2026-11-19. Birdhouses are deliberately excluded after the Aug 2026 XP nerf.
+#
+# Fields (see "Contributing training methods" in the README for the full guide)
+#   id, skill, name, min_level, intensity, cost, source       required
+#   kind               "hourly" (default) or "runs" (farming runs; see `tiers`)
+#   xp_each            XP per action, used to count actions and owned materials
+#   Rates, one of:
+#     xp_per_hour      [low, high]: flat range
+#     rates            [[level, typical_xp_per_hour], ...]: Wiki-style per-level table;
+#                      low = typical x casual_factor (default 0.8), high = typical
+#     rates_range      [[level, low, high], ...]: per-level table with explicit low/high
+#   recipes            list of alternative ingredient sets per action, e.g.
+#                      [{ "Ranarr potion (unf)" = 1, "Snape grass" = 1 }, { ... }]
+#   tools              any-of groups of cheap items you must bring (reported, never blocking)
+#   [requires]         quests (completed), quests_started (started or completed),
+#                      diaries ("Region Tier"), items (any-of groups), skills, combat_level
+#   [[boosts]]         { name, kind = item|diary|quest, effect, items? (all) | any_items? (any) }
+#   approximate        true for rough estimates; `variance` explains what changes the rate
+#   runs only:         patches, minutes_per_run, runs_per_day, tiers = [{ level, crop, xp_per_patch }]
+
+# ======================================================================== Thieving
+
+[[method]]
+id = "fruit_stalls_hosidius"
+skill = "Thieving"
+name = "Fruit stalls (Hosidius)"
+min_level = 25
+xp_per_hour = [34_200, 42_750]
+intensity = "low"
+cost = "profit"
+notes = "Low end is one stall, high end two stalls in the easternmost house near the beach."
+source = "https://oldschool.runescape.wiki/w/Thieving_training#Levels_25–50:_Fruit_stalls"
+
+[[method]]
+id = "blackjacking"
+skill = "Thieving"
+name = "Blackjacking (Pollnivneach)"
+min_level = 45
+# Wiki table: XP/h with wines (low) and Saradomin brews (high).
+rates_range = [
+  [45, 86_000, 99_000], [50, 90_000, 103_000], [55, 121_000, 136_000], [60, 126_000, 140_000],
+  [65, 209_000, 230_000], [70, 218_000, 236_000], [75, 226_000, 242_000], [80, 233_000, 247_000],
+  [85, 241_000, 252_000], [90, 248_000, 257_000],
+]
+intensity = "high"
+cost = "cheap"
+tools = [["Oak blackjack", "Willow blackjack", "Maple blackjack", "Oak blackjack(o)", "Oak blackjack(d)", "Willow blackjack(o)", "Willow blackjack(d)", "Maple blackjack(o)", "Maple blackjack(d)"]]
+notes = "Bandits 45-55 (bearded) and 55-65, Menaphite thugs from 65. Very click-intensive."
+source = "https://oldschool.runescape.wiki/w/Thieving_training#Levels_45–55,_65–84/91/99:_Blackjacking"
+[method.requires]
+quests_started = ["The Feud"]
+[[method.boosts]]
+name = "Rogue outfit"
+kind = "item"
+items = ["Rogue mask", "Rogue top", "Rogue trousers", "Rogue gloves", "Rogue boots"]
+effect = "Double loot per pickpocket (coins, not XP)"
+
+[[method]]
+id = "stealing_artefacts"
+skill = "Thieving"
+name = "Stealing artefacts (Port Piscarilius)"
+min_level = 49
+rates = [
+  [49, 150_000], [55, 163_000], [60, 174_000], [65, 186_000], [70, 197_000],
+  [75, 208_000], [80, 219_000], [85, 230_000], [90, 241_000], [95, 252_000],
+]
+casual_factor = 0.75
+intensity = "medium"
+cost = "profit"
+tools = [["Lockpick", "Hair clip"]]
+notes = "Fastest from 49 to 65. Wiki rates assume stamina potions, the book of the dead and guard lures. Each heist also pays 500-1,000 coins."
+source = "https://oldschool.runescape.wiki/w/Thieving_training#Levels_49–65/99:_Stealing_artefacts"
+[[method.boosts]]
+name = "Stamina potion(4)"
+kind = "item"
+effect = "Keeps run energy up between houses and Captain Khaled"
+[[method.boosts]]
+name = "Book of the dead"
+kind = "item"
+effect = "Teleport back to the Fisher's Flute between heists"
+
+[[method]]
+id = "wealthy_citizens"
+skill = "Thieving"
+name = "Stealing valuables / wealthy citizens (Civitas illa Fortis)"
+min_level = 50
+rates = [[50, 72_000], [60, 80_000], [70, 93_000], [80, 95_000], [90, 100_000]]
+casual_factor = 0.9
+intensity = "afk"
+cost = "profit"
+notes = "Low-effort and very AFK; about 65k/h with minimal effort, more when hopping worlds. Collect about 20 house keys per hour of burglary first."
+source = "https://oldschool.runescape.wiki/w/Thieving_training#Levels_50–99:_Stealing_valuables_in_Varlamore"
+[method.requires]
+quests = ["Children of the Sun"]
+
+[[method]]
+id = "ardougne_knights"
+skill = "Thieving"
+name = "Pickpocketing Knights of Ardougne"
+min_level = 55
+xp_each = 84.3
+# Wiki table assumes the medium Ardougne Diary and dodgy necklaces.
+rates = [
+  [55, 86_000], [60, 98_000], [65, 109_000], [70, 124_000], [75, 141_000],
+  [80, 159_000], [85, 182_000], [90, 209_000], [95, 240_000],
+]
+casual_factor = 0.8
+intensity = "medium"
+cost = "profit"
+notes = "Straightforward and steady. Lure a knight north of the market or find a splasher world."
+source = "https://oldschool.runescape.wiki/w/Thieving_training#Levels_55–99:_Knights_of_Ardougne"
+[[method.boosts]]
+name = "Ardougne Medium"
+kind = "diary"
+effect = "+10% pickpocket success in Ardougne; the Wiki's rates assume it"
+[[method.boosts]]
+name = "Dodgy necklace"
+kind = "item"
+effect = "25% chance to avoid being stunned; the Wiki's rates assume it"
+[[method.boosts]]
+name = "Rogue outfit"
+kind = "item"
+items = ["Rogue mask", "Rogue top", "Rogue trousers", "Rogue gloves", "Rogue boots"]
+effect = "Double loot per pickpocket (coins, not XP)"
+
+[[method]]
+id = "pyramid_plunder"
+skill = "Thieving"
+name = "Pyramid Plunder (Sophanem)"
+min_level = 71
+rates = [[71, 125_000], [81, 190_000], [91, 270_000]]
+casual_factor = 0.85
+intensity = "medium"
+cost = "profit"
+notes = "Best from 91. A pharaoh's sceptre (or Contact! for the nearby bank) keeps trips short."
+source = "https://oldschool.runescape.wiki/w/Thieving_training#Levels_91–99:_Pyramid_Plunder"
+
+# ======================================================================== Smithing
+
+[[method]]
+id = "blast_furnace_gold"
+skill = "Smithing"
+name = "Gold bars at the Blast Furnace"
+min_level = 40
+xp_each = 56.2
+xp_per_hour = [266_000, 380_000]
+intensity = "high"
+cost = "expensive"
+recipes = [{ "Gold ore" = 1 }]
+notes = "Wiki: 380k/h with goldsmith gauntlets (410k with a Smithing cape); casual play is lower. Coffer costs 72,000 gp/h; below 60 Smithing the foreman also charges every 10 minutes. Ore you already own is free XP."
+source = "https://oldschool.runescape.wiki/w/Pay-to-play_Smithing_training#Levels_40–99:_Blast_Furnace_gold_bars"
+[method.requires]
+items = [["Goldsmith gauntlets", "Smithing cape", "Smithing cape(t)", "Max cape"]]
+[[method.boosts]]
+name = "Ice gloves"
+kind = "item"
+effect = "Collect bars instantly (needs 50 Mining and the Ice Queen)"
+[[method.boosts]]
+name = "Stamina potion(4)"
+kind = "item"
+effect = "The Wiki's rates assume about 40 doses per hour"
+
+[[method]]
+id = "giants_foundry"
+skill = "Smithing"
+name = "Giants' Foundry"
+min_level = 15
+# Wiki table assumes optimal moulds (up to 81 Smithing) and no Smiths' Uniform.
+rates = [[15, 97_920], [30, 133_920], [50, 164_640], [70, 198_000]]
+casual_factor = 0.75
+intensity = "medium"
+cost = "moderate"
+notes = "Lower-effort alternative. Mithril/adamantite swords are the usual pick; the Smiths' Uniform adds about 5%."
+source = "https://oldschool.runescape.wiki/w/Pay-to-play_Smithing_training#Levels_15–99:_Giants'_Foundry"
+[method.requires]
+quests = ["Sleeping Giants"]
+
+# ======================================================================== Herblore
+# Wiki rates are 2,500 potions/h from unfinished potions; herbs + vials are slower.
+
+[[method]]
+id = "prayer_potions"
+skill = "Herblore"
+name = "Prayer potions"
+min_level = 38
+xp_each = 87.5
+xp_per_hour = [164_000, 218_750]
+intensity = "low"
+cost = "moderate"
+recipes = [
+  { "Ranarr potion (unf)" = 1, "Snape grass" = 1 },
+  { "Ranarr weed" = 1, "Vial of water" = 1, "Snape grass" = 1 },
+  { "Grimy ranarr weed" = 1, "Vial of water" = 1, "Snape grass" = 1 },
+]
+notes = "Among the cheapest training potions per XP."
+source = "https://oldschool.runescape.wiki/w/Herblore_training"
+
+[[method]]
+id = "super_energy"
+skill = "Herblore"
+name = "Super energy potions"
+min_level = 52
+xp_each = 117.5
+xp_per_hour = [220_000, 293_750]
+intensity = "low"
+cost = "moderate"
+recipes = [
+  { "Avantoe potion (unf)" = 1, "Mort myre fungus" = 1 },
+  { "Avantoe" = 1, "Vial of water" = 1, "Mort myre fungus" = 1 },
+  { "Grimy avantoe" = 1, "Vial of water" = 1, "Mort myre fungus" = 1 },
+]
+source = "https://oldschool.runescape.wiki/w/Herblore_training"
+
+[[method]]
+id = "super_restore"
+skill = "Herblore"
+name = "Super restore potions"
+min_level = 63
+xp_each = 142.5
+xp_per_hour = [267_000, 356_000]
+intensity = "low"
+cost = "expensive"
+recipes = [
+  { "Snapdragon potion (unf)" = 1, "Red spiders' eggs" = 1 },
+  { "Snapdragon" = 1, "Vial of water" = 1, "Red spiders' eggs" = 1 },
+  { "Grimy snapdragon" = 1, "Vial of water" = 1, "Red spiders' eggs" = 1 },
+]
+source = "https://oldschool.runescape.wiki/w/Herblore_training"
+
+# ======================================================================== Farming
+
+[[method]]
+id = "tree_runs"
+skill = "Farming"
+name = "Tree runs (regular trees)"
+kind = "runs"
+min_level = 15
+patches = 5
+minutes_per_run = 8
+runs_per_day = 1
+intensity = "low"
+cost = "moderate"
+notes = "Lumbridge, Varrock, Falador, Taverley and the Gnome Stronghold. The Farming Guild adds a patch at 65, and Nemus Retreat in Varlamore another. XP is planting + check-health. Pay gardeners to protect the trees."
+source = "https://oldschool.runescape.wiki/w/Farming_training"
+tiers = [
+  { level = 15, crop = "Oak", xp_per_patch = 481.3 },
+  { level = 30, crop = "Willow", xp_per_patch = 1481.5 },
+  { level = 45, crop = "Maple", xp_per_patch = 3448.4 },
+  { level = 60, crop = "Yew", xp_per_patch = 7150.9 },
+  { level = 75, crop = "Magic", xp_per_patch = 13913.8 },
+]
+
+[[method]]
+id = "fruit_tree_runs"
+skill = "Farming"
+name = "Fruit tree runs"
+kind = "runs"
+min_level = 27
+patches = 4
+minutes_per_run = 8
+runs_per_day = 1
+intensity = "low"
+cost = "moderate"
+notes = "Gnome Stronghold, Tree Gnome Village, Catherby and Brimhaven; Lletya, Kastori (Varlamore) and the Farming Guild (85) add more. 16h growth, so one run a day. XP is planting + check-health + harvest."
+source = "https://oldschool.runescape.wiki/w/Farming_training"
+tiers = [
+  { level = 27, crop = "Apple", xp_per_patch = 1272.5 },
+  { level = 33, crop = "Banana", xp_per_patch = 1841.5 },
+  { level = 39, crop = "Orange", xp_per_patch = 2586.7 },
+  { level = 42, crop = "Curry", xp_per_patch = 3036.9 },
+  { level = 51, crop = "Pineapple", xp_per_patch = 4791.7 },
+  { level = 57, crop = "Papaya", xp_per_patch = 6380.4 },
+  { level = 68, crop = "Palm", xp_per_patch = 10509.6 },
+  { level = 81, crop = "Dragonfruit", xp_per_patch = 17825.0 },
+]
+
+[[method]]
+id = "tithe_farm"
+skill = "Farming"
+name = "Tithe Farm (Logavano seeds)"
+min_level = 74
+xp_per_hour = [90_000, 100_000]
+intensity = "high"
+cost = "cheap"
+notes = "Playable from 34 (Golovanova) and 54 (Bologano) at lower rates the Wiki doesn't list. Rewards include the farmer's outfit."
+source = "https://oldschool.runescape.wiki/w/Farming_training#Tithe_Farm"
+
+# ======================================================================== Hunter
+
+[[method]]
+id = "razor_backed_kebbits"
+skill = "Hunter"
+name = "Razor-backed kebbits (Piscatoris)"
+min_level = 49
+xp_each = 348.5
+xp_per_hour = [100_000, 130_000]
+intensity = "high"
+cost = "cheap"
+tools = [["Noose wand"], ["Ring of pursuit"]]
+notes = "Fastest active method 49-73. Up to 130k/h with stamina potions, about 100k without. Fairy ring AKQ is closest."
+source = "https://oldschool.runescape.wiki/w/Hunter_training#Levels_49–73:_Razor-backed_kebbits"
+
+[[method]]
+id = "red_salamanders"
+skill = "Hunter"
+name = "Red salamanders (Ourania)"
+min_level = 59
+rates_range = [[59, 55_000, 60_000], [60, 80_000, 85_000], [67, 100_000, 105_000]]
+intensity = "medium"
+cost = "cheap"
+tools = [["Rope"], ["Small fishing net"]]
+notes = "Only 3 traps at 59, 4 from 60. Bring 5 ropes and 5 small fishing nets."
+source = "https://oldschool.runescape.wiki/w/Hunter_training#Levels_60–67:_Red_salamanders"
+
+# ======================================================================== Magic
+
+[[method]]
+id = "high_alchemy"
+skill = "Magic"
+name = "High Level Alchemy"
+min_level = 55
+xp_each = 65
+xp_per_hour = [70_000, 78_000]
+intensity = "afk"
+cost = "moderate"
+recipes = [{ "Nature rune" = 1 }]
+notes = "5-tick spell: about 1,200 casts/h. Profit or loss depends on the item alched."
+source = "https://oldschool.runescape.wiki/w/High_Level_Alchemy"
+[[method.boosts]]
+name = "Fire staff"
+kind = "item"
+any_items = ["Staff of fire", "Fire battlestaff", "Mystic fire staff", "Lava battlestaff", "Mystic lava staff", "Steam battlestaff", "Mystic steam staff", "Smoke battlestaff", "Mystic smoke staff", "Tome of fire"]
+effect = "Saves the 5 fire runes per cast"
+
+# ======================================================================== Slayer
+# There is no Wiki XP/h table for Slayer: XP equals the HP of what you kill, so rates depend
+# on your master, tasks, gear and cannon/burst use. These are rough community estimates.
+
+[[method]]
+id = "slayer_turael"
+skill = "Slayer"
+name = "Low-level tasks (Turael / Spria)"
+min_level = 1
+xp_per_hour = [10_000, 15_000]
+intensity = "medium"
+cost = "cheap"
+approximate = true
+variance = "Low-HP monsters; mostly useful for task streaks or skipping (Turael boosting)."
+notes = "No Slayer points from Turael."
+source = "https://www.osrsbestinslot.com/osrs-slayer-calculator/"
+
+[[method]]
+id = "slayer_mid_melee"
+skill = "Slayer"
+name = "Melee tasks from Nieve / Steve (no cannon)"
+min_level = 1
+xp_per_hour = [25_000, 35_000]
+intensity = "medium"
+cost = "moderate"
+approximate = true
+variance = "Depends heavily on which tasks you get, your gear and how many you skip or block."
+notes = "Nieve/Steve need 85 combat. Duradel (100 combat + 50 Slayer, Shilo Village) is the Wiki's pick for the fastest XP once you qualify."
+source = "https://www.osrsbestinslot.com/osrs-slayer-calculator/"
+[method.requires]
+combat_level = 85
+
+[[method]]
+id = "slayer_cannon"
+skill = "Slayer"
+name = "Cannon-assisted tasks (Nieve / Steve)"
+min_level = 1
+xp_per_hour = [30_000, 40_000]
+intensity = "medium"
+cost = "expensive"
+approximate = true
+variance = "Cannonballs cost a lot (Wiki: ~750-1,500 per average task); only some tasks are cannonable."
+source = "https://www.osrsbestinslot.com/osrs-slayer-calculator/"
+[method.requires]
+combat_level = 85
+quests = ["Dwarf Cannon"]
+items = [["Cannon base"]]
+
+[[method]]
+id = "slayer_burst"
+skill = "Slayer"
+name = "Bursting / barraging stacked tasks"
+min_level = 75
+xp_per_hour = [90_000, 120_000]
+intensity = "high"
+cost = "expensive"
+approximate = true
+variance = "Only on tasks that stack (e.g. dust devils, nechryael); expensive runes."
+notes = "Ancient Magicks from Desert Treasure I; Ice Burst needs 70 Magic."
+source = "https://www.osrsbestinslot.com/osrs-slayer-calculator/"
+[method.requires]
+quests = ["Desert Treasure I"]
+skills = { Magic = 70 }
+combat_level = 85

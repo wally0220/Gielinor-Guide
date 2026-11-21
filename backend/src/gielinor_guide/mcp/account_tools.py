@@ -12,10 +12,17 @@ from mcp_types import ToolAnnotations
 from pydantic import BaseModel, Field
 
 from gielinor_guide.core.errors import OSRSError
+from gielinor_guide.core.hiscores import fetch_player
 from gielinor_guide.core.http import OSRSHttp
 from gielinor_guide.core.runelite_export import CONTAINERS, Container, load_owned_items
 from gielinor_guide.core.store import Store
-from gielinor_guide.core.wikisync import DIARY_TIERS, Profile, QuestState, fetch_progress
+from gielinor_guide.core.wikisync import (
+    DIARY_TIERS,
+    Profile,
+    QuestState,
+    fetch_progress,
+    hiscores_mode_for_profile,
+)
 
 READ_ONLY_REMOTE = ToolAnnotations(read_only_hint=True, open_world_hint=True)
 # import_bank writes snapshots to the local history DB, but re-running it is harmless.
@@ -48,6 +55,12 @@ class DiaryRegionOut(BaseModel):
     tasks: dict[str, str] = Field(description='Per tier "done/total", e.g. {"Easy": "10/10"}')
 
 
+class LevelMismatchOut(BaseModel):
+    skill: str
+    wikisync: int
+    hiscores: int
+
+
 class AccountProgressOut(BaseModel):
     rsn: str
     synced_at: str = Field(description="When WikiSync last received data (ISO 8601, UTC)")
@@ -62,6 +75,9 @@ class AccountProgressOut(BaseModel):
     not_started_quest_names: list[str] | None = Field(None, description="Only with detail='full'")
     diaries: list[DiaryRegionOut]
     levels: dict[str, int] = Field(description="Levels as of the last sync (hiscores = live XP)")
+    level_mismatches: list[LevelMismatchOut] = Field(
+        description="Skills where WikiSync's level differs from the hiscores. Trust the hiscores."
+    )
     combat_achievements_completed: int
     collection_log_items: int
     music_tracks_unlocked: str
@@ -165,6 +181,34 @@ def register_account_tools(
 
         age_min = max(0, int(progress.age_seconds(now()) // 60))
         notes: list[str] = []
+
+        # WikiSync's `levels` can lag behind (seen: Magic 70 vs. 75 on the hiscores), so
+        # cross-check against the hiscores table for the same character (a Leagues profile
+        # against the seasonal table; ironmen are ranked on the normal table too).
+        mismatches: list[LevelMismatchOut] = []
+        mode = hiscores_mode_for_profile(profile)
+        if mode is None:
+            notes.append(f"No hiscores for the {profile} profile, so levels weren't cross-checked.")
+        else:
+            try:
+                player = await fetch_player(client, name, mode)
+            except OSRSError as exc:
+                notes.append(f"Couldn't cross-check levels with the hiscores ({exc}).")
+            else:
+                for skill, ws_level in sorted(progress.levels.items()):
+                    stat = player.skills.get(skill)
+                    if stat is None or stat.level is None or stat.level == ws_level:
+                        continue
+                    mismatches.append(
+                        LevelMismatchOut(skill=skill, wikisync=ws_level, hiscores=stat.level)
+                    )
+        if mismatches:
+            listed = ", ".join(f"{m.skill} {m.wikisync}→{m.hiscores}" for m in mismatches[:5])
+            more = f" (+{len(mismatches) - 5} more)" if len(mismatches) > 5 else ""
+            notes.append(
+                f"WikiSync levels differ from the {mode} hiscores for {len(mismatches)} "
+                f"skill(s): {listed}{more}. Use get_player_stats (mode={mode!r}) for levels and XP."
+            )
         if age_min > 24 * 60:
             notes.append(
                 f"WikiSync data is {age_min // 60}h old; log in with RuneLite to refresh it."
@@ -190,6 +234,7 @@ def register_account_tools(
             not_started_quest_names=progress.quests_in(QuestState.NOT_STARTED) if full else None,
             diaries=list(regions.values()),
             levels=progress.levels,
+            level_mismatches=mismatches,
             combat_achievements_completed=len(progress.combat_achievement_ids),
             collection_log_items=len(progress.collection_log_ids),
             music_tracks_unlocked=f"{progress.music_unlocked}/{progress.music_total}",

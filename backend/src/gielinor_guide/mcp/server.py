@@ -28,6 +28,7 @@ from gielinor_guide.core.http import OSRSHttp
 from gielinor_guide.core.skills import SKILLS, normalize_skill
 from gielinor_guide.core.store import Store
 from gielinor_guide.mcp.account_tools import register_account_tools, utc_now
+from gielinor_guide.mcp.training_tools import register_training_tools
 
 INSTRUCTIONS = """\
 Live Old School RuneScape data. Prefer these tools over memory for anything that changes
@@ -41,6 +42,9 @@ Live Old School RuneScape data. Prefer these tools over memory for anything that
   RuneLite exports (import_bank) cover what the player owns and is wearing.
 - Combine them: e.g. check owned items before suggesting what to buy, and quest/diary status
   before suggesting methods that need unlocks.
+- For "how should I train X" / "how long to level Y", use suggest_training: it already
+  combines hiscores, WikiSync and the bank export. Present its route first, give hours as
+  ranges, and call out owned materials and missing boosts it reports.
 - After answering, offer one or two natural follow-ups the other tools can answer.
 """
 
@@ -265,6 +269,7 @@ def build_server(
     register_account_tools(
         server, client=client, resolve_rsn=resolve_rsn, get_store=get_store, now=now
     )
+    register_training_tools(server, client=client, resolve_rsn=resolve_rsn)
     return server
 
 

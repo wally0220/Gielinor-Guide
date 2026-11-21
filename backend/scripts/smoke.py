@@ -60,6 +60,11 @@ async def main(rsn: str | None) -> None:
             await client.call_tool("import_bank", {**args, "search": "cosmic"}),
             ["coins", "equipped", "search_results", "notes"],
         )
+        show(
+            "suggest_training",
+            await client.call_tool("suggest_training", {**args, "skill": "thieving"}),
+            ["current_level", "target_level", "route", "route_hours", "notes", "data_sources"],
+        )
 
 
 if __name__ == "__main__":
